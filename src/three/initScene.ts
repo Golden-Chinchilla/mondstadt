@@ -5,25 +5,21 @@ export type SceneAPI = {
     pos: THREE.Vector3Like,
     lookAt?: THREE.Vector3Like
   ) => void;
+  focusOnObjectByName: (name: string) => void;
   spinFaster: () => void;
   spinSlower: () => void;
   dispose: () => void;
 };
 
 export function initScene(): SceneAPI {
-  // 通过 id 获取要绘制的 canvas；在 React 里通常是通过 ref 绑定的
   const canvas = document.getElementById("three-canvas") as HTMLCanvasElement;
-
-  // WebGL 渲染器：开启抗锯齿，并根据画布尺寸和屏幕像素比设置渲染大小
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio || 1);
 
-  // 创建场景并设置背景色
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
 
-  // 透视相机：45°视角、近平面 0.1、远平面 1000，并将相机放到 (3,3,3) 看向原点
   const camera = new THREE.PerspectiveCamera(
     45,
     canvas.clientWidth / canvas.clientHeight,
@@ -33,14 +29,21 @@ export function initScene(): SceneAPI {
   camera.position.set(3, 3, 3);
   camera.lookAt(0, 0, 0);
 
+  // 相机平滑飞行所需的状态
+  const currentCamPos = new THREE.Vector3().copy(camera.position);
+  const currentCamTarget = new THREE.Vector3(0, 0, 0);
+  const targetCamPos = new THREE.Vector3().copy(camera.position);
+  const targetCamTarget = new THREE.Vector3(0, 0, 0);
+  const lerpFactor = 0.08; // 越大飞行越快
+
   // 一个简单的立方体网格，使用标准材质并着橙色
   const cube = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({ color: "orange" })
   );
+  cube.name = "DemoCube";
   scene.add(cube);
 
-  // 平行光和环境光：平行光提供主光源方向，环境光提升整体亮度
   const light = new THREE.DirectionalLight("white", 1.2);
   light.position.set(5, 5, 5);
   scene.add(light);
@@ -48,42 +51,72 @@ export function initScene(): SceneAPI {
   const ambient = new THREE.AmbientLight("white", 0.4);
   scene.add(ambient);
 
-  // 控制旋转速度及动画帧 id
   let spinSpeed = 0.01;
   let animationFrameId: number;
 
-  // 每一帧让立方体绕 Y 轴旋转一点，然后渲染场景
   function animate() {
     animationFrameId = requestAnimationFrame(animate);
     cube.rotation.y += spinSpeed;
+
+    // 相机位置和目标的插值更新 ===
+    currentCamPos.lerp(targetCamPos, lerpFactor);
+    currentCamTarget.lerp(targetCamTarget, lerpFactor);
+    camera.position.copy(currentCamPos);
+    camera.lookAt(currentCamTarget);
+
     renderer.render(scene, camera);
   }
 
   animate();
 
-  // === 对外暴露的控制函数 ===
+  // 对外暴露的控制函数
+  const setCameraPosition = (
+    pos: THREE.Vector3Like,
+    lookAt: THREE.Vector3Like = { x: 0, y: 0, z: 0 }
+  ) => {
+    targetCamPos.set(pos.x, pos.y, pos.z);
+    targetCamTarget.set(lookAt.x, lookAt.y, lookAt.z);
+  };
+
+  const focusOnObjectByName = (name: string) => {
+    const obj = scene.getObjectByName(name);
+    if (!obj) {
+      console.warn(`[focusOnObjectByName] object not found: ${name}`);
+      return;
+    }
+
+    const box = new THREE.Box3().setFromObject(obj);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxSize = Math.max(size.x, size.y, size.z) || 1;
+    const distance = maxSize * 3; // 简单估计一个合适距离
+
+    const offset = new THREE.Vector3(distance, distance, distance);
+    targetCamPos.copy(center).add(offset);
+    targetCamTarget.copy(center);
+  };
+
+  const spinFaster = () => {
+    spinSpeed *= 1.5;
+  };
+
+  const spinSlower = () => {
+    spinSpeed *= 0.7;
+  };
+
+  const dispose = () => {
+    cancelAnimationFrame(animationFrameId);
+    renderer.dispose();
+    cube.geometry.dispose();
+    (cube.material as THREE.Material).dispose();
+  };
+
   const api: SceneAPI = {
-    // 设置相机位置，并可选择性传入新的观察点
-    setCameraPosition(pos, lookAt = { x: 0, y: 0, z: 0 }) {
-      camera.position.set(pos.x, pos.y, pos.z);
-      camera.lookAt(lookAt.x, lookAt.y, lookAt.z);
-    },
-    // 提高旋转速度（乘以 1.5）
-    spinFaster() {
-      spinSpeed *= 1.5;
-    },
-    // 降低旋转速度（乘以 0.7）
-    spinSlower() {
-      spinSpeed *= 0.7;
-    },
-    // 停止动画并释放 WebGL 资源
-    dispose() {
-      cancelAnimationFrame(animationFrameId);
-      renderer.dispose();
-      // 释放几何体和材质，加载大模型时可在此扩展更多清理逻辑
-      cube.geometry.dispose();
-      (cube.material as THREE.Material).dispose();
-    },
+    setCameraPosition,
+    focusOnObjectByName,
+    spinFaster,
+    spinSlower,
+    dispose,
   };
 
   // 窗口尺寸变化时同步更新相机宽高比和渲染尺寸

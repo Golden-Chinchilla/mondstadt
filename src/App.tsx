@@ -64,6 +64,12 @@ function App() {
           >
             侧面视角
           </button>
+          <button
+            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
+            onClick={() => sceneRef.current?.focusOnObjectByName("DemoCube")}
+          >
+            聚焦 DemoCube
+          </button>
         </div>
 
         <div className="space-y-2">
