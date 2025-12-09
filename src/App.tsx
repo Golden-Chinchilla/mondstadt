@@ -28,68 +28,21 @@ function App() {
         <h1 className="text-lg font-semibold">Mondstadt 控制面板</h1>
 
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-slate-300">
-            视角切换（示例）
-          </h2>
           <button
             className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
-            onClick={() =>
-              sceneRef.current?.setCameraPosition(
-                { x: 3, y: 3, z: 3 },
-                { x: 0, y: 0, z: 0 }
-              )
-            }
-          >
-            默认视角
-          </button>
-          <button
-            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
-            onClick={() =>
-              sceneRef.current?.setCameraPosition(
-                { x: 0, y: 5, z: 0 },
-                { x: 0, y: 0, z: 0 }
-              )
-            }
-          >
-            俯视视角
-          </button>
-          <button
-            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
-            onClick={() =>
-              sceneRef.current?.setCameraPosition(
-                { x: 6, y: 2, z: 0 },
-                { x: 0, y: 0, z: 0 }
-              )
-            }
-          >
-            侧面视角
-          </button>
-          <button
-            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
-            // onClick={() => sceneRef.current?.focusOnObjectByName("DemoCube")}
             onClick={() =>
               sceneRef.current?.focusOnObjectByName("Mondstadt_Windmill002")
             }
           >
-            聚焦 DemoCube
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-slate-300">
-            旋转速度（示例）
-          </h2>
-          <button
-            className="px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-sm"
-            onClick={() => sceneRef.current?.spinFaster()}
-          >
-            转快一点
+            聚焦 Windmill
           </button>
           <button
-            className="px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 text-sm"
-            onClick={() => sceneRef.current?.spinSlower()}
+            className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
+            onClick={() =>
+              sceneRef.current?.focusOnObjectByName("Mondstadt_Fountain")
+            }
           >
-            转慢一点
+            聚焦 Fountain
           </button>
         </div>
       </div>
