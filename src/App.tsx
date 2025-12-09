@@ -66,7 +66,10 @@ function App() {
           </button>
           <button
             className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-sm"
-            onClick={() => sceneRef.current?.focusOnObjectByName("DemoCube")}
+            // onClick={() => sceneRef.current?.focusOnObjectByName("DemoCube")}
+            onClick={() =>
+              sceneRef.current?.focusOnObjectByName("Mondstadt_Windmill002")
+            }
           >
             聚焦 DemoCube
           </button>

@@ -1,4 +1,9 @@
 import * as THREE from "three";
+import {
+  GLTFLoader,
+  type GLTF,
+} from "three/examples/jsm/loaders/GLTFLoader.js";
+import mondstadtTestUrl from "../assets/models/mondstadt-test.glb";
 
 export type SceneAPI = {
   setCameraPosition: (
@@ -16,6 +21,33 @@ export function initScene(): SceneAPI {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(canvas.clientWidth, canvas.clientHeight);
   renderer.setPixelRatio(window.devicePixelRatio || 1);
+
+  // === 加载 glb 模型 ===
+  const loader = new GLTFLoader();
+
+  loader.load(
+    mondstadtTestUrl,
+    (gltf: GLTF) => {
+      const root = gltf.scene;
+      root.name = "MondstadtTestRoot";
+      scene.add(root);
+
+      // 打印一下节点树，方便你在控制台里看到有哪些名字可用
+      console.log("GLB loaded:", root);
+      root.traverse((obj: THREE.Object3D) => {
+        if (obj.name) {
+          console.log("Node:", obj.name, obj.type);
+        }
+      });
+    },
+    (event: ProgressEvent<EventTarget>) => {
+      const progress = (event.loaded / (event.total || 1)) * 100;
+      console.log(`Loading glb: ${progress.toFixed(1)}%`);
+    },
+    (error: unknown) => {
+      console.error("Failed to load glb:", error);
+    }
+  );
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
